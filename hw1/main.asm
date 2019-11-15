@@ -24,7 +24,7 @@ start:
     get_command:
         m_scan_s buff
         m_set_tokenizer buff, token, space_symb
-
+        int 3
         parse:
         call proc_next_token
 

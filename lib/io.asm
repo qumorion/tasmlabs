@@ -12,15 +12,14 @@ ret ; команда возврата берет адрес из стека
 endp _cmp_s_proc
 
 
-is_equal macro buff, second 
+is_equal macro string, second 
 pusha
-mov ax, seg buff
+mov ax, seg string
 mov ds, ax
 mov ax, seg second
 mov es, ax
 
-lea si, buff
-inc si              ; Пропускаем служебный байт буфера
+lea si, string
 lea di, second
 
 call _cmp_s_proc

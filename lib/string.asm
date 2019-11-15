@@ -7,12 +7,17 @@ endm
 proc_next_token proc near
 repe scasb ;skip spaces
 dec di
+inc cx
 check_cx
 
     mov dx, di ; save start index 
     repne scasb ; find ending of a token
+    cmp cx, 0   ; if was stopped by cx, we do not need to back by 1 index
+    je copy
     dec di
+    inc cx
 
+    copy:
     pusha
         mov ax, di
         sub ax, dx ; size of token
@@ -45,5 +50,4 @@ m_set_tokenizer macro string, token, delimiter ; адрес строки дол�
     lea di, string
     add di, 2          ; skip system bytes of buffer
 
-    call proc_next_token
 endm
