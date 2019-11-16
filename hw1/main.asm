@@ -4,9 +4,11 @@ LOCALS
 .486
 
 .data
-buff db 126, 128 dup(?) ;   2 байта служебные
+buff db 126, 128 dup(?) ;   2 байта служебные, первый - размер, второй - количество введенных пользователем
 token db 40, 40 dup(?)
-matrix db 102 dup(?)    ;   2 байта служебные
+matrix db 102 dup(?)    ;   2 байта служебные, row + col
+
+; ЗДЕСЬ НАХОДЯТСЯ СТРОКИ ДЛЯ ВЗАИМОДЕЙСТВИЯ С ПОЛЬЗОВАТЕЛЕМ, ВКЛЮЧАЯ КОМАНДЫ МЕНЮ
 q_command db '> $'
 q_exit db 4, 'exit'
 q_enter db 5, 'enter'
@@ -17,14 +19,19 @@ q_search db 6, 'search'
 q_less db 4, 'less'
 q_nonzero db 7, 'nonzero'
 q_debug db 5, 'debug'
+
 space_symb db ' '
 rows db 0
 columns db 0
 
+
+
+
+
 .code
-include io.asm
-include string.asm
-include xmatrix.asm
+include io.asm          ; Содержит процедуры для ввода-вывода чисел, объединяет в себя scanner и printer
+include string.asm      ; Предназначен для работы со строками, пока что содержит сравниватель и токенайзер
+include xmatrix.asm     ; Для работы с матрицами
 
 start:
     mov ax, @data
@@ -38,9 +45,16 @@ start:
     parse:
         call proc_next_token                        ; get word from string
 
-        ; Comparing with menu commands
-        is_equal token, q_exit ; == exit?  
-        je handle_exit
+
+        ; ЗДЕСЬ НАХОДИТСЯ ОСНОВНАЯ ЛОГИКА ИНТЕРФЕЙСА. 
+        ; ТОКЕНАЙЗЕР РАЗБИРАЕТ СТРОКУ НА ОТДЕЛЬНЫЕ СЛОВА, ПОСЛЕ ЧЕГО 
+        ; ЗДЕСЬ ПРОИСХОДИТ ИХ СРАВНЕНИЕ НА СОВПАДЕНИЕ С КОМАНДОЙ.
+        is_equal token, q_exit ; В ЭТУ СЕКЦИЮ МОЖНО ДОБАВЛЯТЬ ПРОВЕРКУ НА КОМАНДУ. СРАВНЕНИЕ УЖЕ НАСТРОЕНО.
+        je handle_exit         ; ЗДЕСЬ НУЖНО УКАЗАТЬ МЕТКУ, ВЫБРАННУЮ ДЛЯ ИСПОЛНЕНИЯ КОМАНДЫ.
+                               ; САМО ИСПОЛНЕНИЕ ОПИСЫВАЕТСЯ НИЖЕ
+        ; ПРИМЕР:
+        ; is_equal token, my_command
+        ; je handle_my_command
         is_equal token, q_enter
         je handle_enter
         is_equal token, q_draw
@@ -49,12 +63,26 @@ start:
         je handle_debug
         jmp next_command
 
-        handle_exit:    ; shut down program                                       
+
+; ==========================================================================================================
+        ; ЗДЕСЬ МОЖНО ДОБАВЛЯТЬ ЛОГИКУ ИСПОЛНЯЕМЫХ КОМАНД.
+        ; НУЖНО УКАЗАТЬ ВЫБРАННУЮ МЕТКУ, А В КОНЦЕ ДОБАВИТЬ ПЕРЕХОД НА next_command
+
+        ; ЕСЛИ ВЫ РАБОТАЛИ С ВВОДОМ-ВЫВОДОМ, ТО В КОНЦЕ МОЖНО ДЕЛАТЬ ПЕРЕХОД НА get_string, НО ЕСЛИ
+        ; В СТРОКЕ С КОМАНДАМИ БЫЛИ И ДРУГИЕ КОМАНДЫ, ТО ОНИ НЕ БУДУТ ВЫПОЛНЕНЫ
+
+        ;ПРИМЕР:
+        ;       handle_my_command:
+        ;       ... (code)
+        ;       jmp next_command
+
+    handle_exit:    ; shut down program                                       
             call pnl
             mov ax, 4C00h
             int 21h
 
-        handle_enter:   ; ENTER MATRIX
+
+    handle_enter:   ; ENTER MATRIX
             call pnl
             m_print_s q_enter_sizes
             m_scan_s buff ; get string
@@ -80,16 +108,18 @@ start:
             jmp get_string ; skip cx checking
 
 
-        handle_draw:
+    handle_draw:
             call pnl
             push offset matrix
             push offset buff
             call proc_print_matrix
-        jmp next_command
+    jmp next_command
 
-        handle_debug:
+
+    handle_debug:
             int 3
-        jmp next_command
+    jmp next_command
+
 
     next_command:
     cmp cx, 0                                   ; input done? take next string
@@ -97,5 +127,9 @@ start:
     call pnl                                    ; print /n
     jmp get_string
     
+
+
+
+
     
 end start

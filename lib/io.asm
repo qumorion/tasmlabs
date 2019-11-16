@@ -1,32 +1,5 @@
-_cmp_s_proc proc near
-    ; ds:si - первая строка
-    ; es:di - вторая строка   
-    xor cx, cx
-    mov cl, [si] 
-    comp_char:
-        cmpsb       ; Сравниваем символы строк
-        jne return
-    loop comp_char
-    return:
-ret ; команда возврата берет адрес из стека
-endp _cmp_s_proc
-
-
-is_equal macro string, second 
-pusha
-mov ax, seg string
-mov ds, ax
-mov ax, seg second
-mov es, ax
-
-lea si, string
-lea di, second
-
-call _cmp_s_proc
-popa
-endm
-
-
+; ПРОЦЕДУРА ПЕРЕНОСИТ КАРЕТКУ НА НОВУЮ СТРОКУ.
+; НЕ ПОРТИТ РЕГИСТРЫ.
 pnl proc near
 push ax
 push dx
@@ -41,5 +14,6 @@ pop ax
 ret
 endp pnl
 
+; ВКЛЮЧАЕТ В СЕБЯ ПРИНТЕР И СКАНЕР ДЛЯ РАБОТЫ С ВЫВОДОМ-ВВОДОМ
 include printer.asm
 include scanner.asm
