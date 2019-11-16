@@ -25,11 +25,7 @@ start:
     mov ax, @data
     mov ds, ax
 
-    ; TESTING!!!!
-    jmp handle_enter
-
     get_string:
-    m_scan_b buff, num
         m_scan_s buff                               ; read string from console
         m_set_tokenizer buff, token, space_symb     ; set up di, si and ds, es, also, delimeter
 
@@ -46,20 +42,22 @@ start:
 
 
         handle_exit:    ; shut down program                                       
-        call pnl
-        mov ax, 4C00h
-        int 21h
+            call pnl
+            mov ax, 4C00h
+            int 21h
   
 
         handle_enter:
-        m_enter_matrix matrix, 3, 3, buff, token
-        jmp next_command
+            m_enter_matrix matrix, 3, 3, buff, token
+            jmp next_command
 
 
         handle_draw:
-        jmp next_command
+            
+            jmp next_command
 
     next_command:
+    int 3
     cmp cx, 0                                   ; input done? take next string
     jne get_string
     call pnl                                    ; print /n

@@ -12,6 +12,7 @@ m_scan_s macro buff
     push offset buff
     call proc_scan_s
 endm
+
    
 
 
@@ -35,7 +36,7 @@ proc_scan_int proc near
         mov cl, [bx][1]                 ; Инициализируем переменную счетчика
         xor eax, eax
         xor edx, edx
-        xor ebx, ebx
+        
         add bx, 2                         ; Введенная строка начинается со второго байта                                            
 
         cmp byte ptr [bx], 2Dh                ; Проверяем отрицательное ли число

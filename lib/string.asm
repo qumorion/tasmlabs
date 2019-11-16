@@ -12,10 +12,10 @@ check_cx
 
     mov dx, di ; save start index 
     repne scasb ; find ending of the token
+    
     cmp cx, 0   ; if was stopped by cx, we do not need to back by 1 index
     je copy
     dec di
-    inc cx
 
     copy:
     pusha
@@ -57,12 +57,12 @@ m_set_matrix_tokenizer macro string_off, token_off, delimiter ; адрес ст�
     mov ds, ax
     mov es, ax
 
-    mov di, token_off
+    mov di, string_off
     xor cx, cx
     mov cl, [di][1]  ; mov size of string
 
     xor bx, bx
-    mov bl, token   ; save start
+    mov bx, token_off   ; save start
     xor eax, eax
     mov al, delimiter
     mov di, string_off

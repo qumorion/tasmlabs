@@ -2,11 +2,11 @@ _convert_string_to_byte proc near
     @@getUserInput:
         ; startCheck   
         mov bx, si 
-        mov cl, [bx][1]                 ; Инициализируем переменную счетчика
+        mov cl, [bx]                      ; Инициализируем переменную счетчика
         xor eax, eax
         xor edx, edx
-        xor ebx, ebx
-        add bx, 2                         ; Введенная строка начинается со второго байта                                            
+        inc bx
+        inc si                              ; Введенная строка начинается со второго байта                                            
 
         cmp byte ptr [bx], 2Dh                ; Проверяем отрицательное ли число
         jne @@startParser                     ; Если отрицательное - нужно пропустить минус
@@ -35,14 +35,15 @@ _convert_string_to_byte proc near
     jne @@endParser   
     neg eax
     @@endParser:
-    mov edx, eax
+    pop dx
+    push eax
+    push dx
 ret
 endp
 
 
 proc_enter_matrix proc near
-local @@matrix:word:?, @@buff:word:?, @@token:word:?, @@delim:byte:' ', @@ret_adr:word:?
-local @@max_row:word:?, @@max_column:word:?, @@row:word:0, @@column:word:0
+local @@matrix:word:1, @@buff:word:1, @@token:word:1, @@delim:byte:1, @@ret_adr:word:1, @@max_row:word:1, @@max_column:word:1, @@row:word:1, @@column:word:1
 
     pop @@ret_adr
     pop @@matrix
@@ -50,18 +51,31 @@ local @@max_row:word:?, @@max_column:word:?, @@row:word:0, @@column:word:0
     pop @@token
     pop @@max_row
     pop @@max_column
-    m_set_matrix_tokenizer @@buff, @@token, @@delim
-    pusha
+    mov @@delim, ' '
 
-take_row:
+
+next_row:
+    mov bx, @@row
+    cmp bx, @@max_row
+    jae end_enter
+    call pnl
+
+    push @@buff
+    call proc_scan_s
+
+    m_set_matrix_tokenizer @@buff, @@token, @@delim
+    mov @@column, 0
+next_column:
+pusha
     mov di, @@column
     cmp di, @@max_column
-    je end_enter
+    je end_row
+popa
 
-    popa
     call proc_next_token
-    pusha
     mov si, @@token
+
+pusha
     call _convert_string_to_byte
     
     ; getting adress
@@ -72,26 +86,27 @@ take_row:
     add ax, @@matrix    ; full offset
 
     mov bx, ax
-    mov [bx], dl
+    pop edx             ; get result from _convert_string_to_byte
+    mov [bx], dl        ; mov next number
+popa
 
     inc @@column
-jmp take_row
+jmp next_column
 
-mov bp, @@row
-cmp bp, @@max_row
-je end_enter
-inc @@row
-jmp take_row
+end_row:
+    inc @@row
+    jmp next_row
 
 end_enter:
-popa ; last cycle must pop
-push @@ret_adr
-ret 
-endp
+;popa ; last cycle must pop
+    push @@ret_adr
+    ret 
+    endp
+
+
 
 m_enter_matrix macro matrix, rows, columns, buff, token
 pusha
-    int 3
     xor eax, eax
     mov al, columns
     push ax
@@ -99,7 +114,14 @@ pusha
     push ax
     push offset token
     push offset buff
-    push offset matrix
+
+    mov bx, offset matrix   ; skip sizes bytes
+    mov [bx], rows
+    mov [bx]+1, columns
+    add bx, 2
+    push bx
+
     call proc_enter_matrix
 popa
 endm
+
