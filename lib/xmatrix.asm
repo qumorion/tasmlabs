@@ -8,6 +8,8 @@ local @@matrix:word:1, @@buff:word:1, @@token:word:1, @@delim:byte:1, @@ret_adr:
     pop @@max_row
     pop @@max_column
     mov @@delim, ' '
+    mov @@row, 0
+    mov @@column, 0
 
 
 next_row:
@@ -83,3 +85,74 @@ pusha
 popa
 endm
 
+
+proc_get_by_index proc near ; index into di:si, matrix offset in bx
+local @@_ret:word:1
+pop @@_ret
+push bx
+    mov al, [bx]    ; num of rows
+    add bx, 2
+    mul di
+    add ax, si
+    add ax, bx
+
+    mov bx, ax
+    xor ax, ax
+    mov al, [bx]  ;   result
+
+pop bx
+push @@_ret
+ret
+endp
+
+proc_print_matrix proc near
+local @@matrix:word:1, @@buff:word:1, @@ret_:word:1
+    pop @@ret_
+    pop @@buff
+    pop @@matrix
+
+    pusha
+        mov bx, @@matrix
+        mov di, 0
+        mov si, 0
+
+    @@next_row:
+    call pnl
+    xor ax, ax
+    mov al, [bx]
+    cmp di, ax
+    jae @@end_print
+    mov si, 0
+
+        @@next_column:
+        mov al, [bx][1]
+        cmp si, ax
+        jae @@end_column
+
+        call proc_get_by_index  ;   get element
+
+        ; PRINTING ELEMENT
+        pusha
+        mov si, @@buff
+        cbw 
+        cwde 
+        call proc_print_int
+
+        mov ah, 2
+        mov dl, ' '
+        int 21h
+        popa
+
+        inc si
+        jmp @@next_column
+
+    @@end_column:
+    inc di
+    jmp @@next_row
+
+    popa
+
+@@end_print:
+push @@ret_
+ret
+endp

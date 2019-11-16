@@ -10,12 +10,13 @@ matrix db 102 dup(?)    ;   2 байта служебные
 q_command db '> $'
 q_exit db 4, 'exit'
 q_enter db 5, 'enter'
-q_enter_row db 'Enter'
-q_enter_please db 'Please, enter matrix sizes: $'
+q_enter_sizes db 'Please, enter matrix sizes: $'
+q_enter_matrix db 'Please, enter rows of matrix: $'
 q_draw db 4, 'draw'
 q_search db 6, 'search'
 q_less db 4, 'less'
 q_nonzero db 7, 'nonzero'
+q_debug db 5, 'debug'
 space_symb db ' '
 rows db 0
 columns db 0
@@ -44,21 +45,21 @@ start:
         je handle_enter
         is_equal token, q_draw
         je handle_draw
+        is_equal token, q_debug
+        je handle_debug
         jmp next_command
 
         handle_exit:    ; shut down program                                       
             call pnl
             mov ax, 4C00h
             int 21h
-  
 
         handle_enter:   ; ENTER MATRIX
             call pnl
-            m_print_s q_enter_please
+            m_print_s q_enter_sizes
             m_scan_s buff ; get string
             m_set_tokenizer buff, token, space_symb
 
-            int 3
             call proc_next_token ; get rows
         pusha
             lea si, token   
@@ -71,18 +72,26 @@ start:
             call _convert_string_to_byte ; convert to number
             pop eax
             mov [columns], al
-        
+
+            call pnl
+            m_print_s q_enter_matrix
             m_enter_matrix matrix, rows, columns, buff, token
             call pnl
             jmp get_string ; skip cx checking
 
 
         handle_draw:
+            call pnl
+            push offset matrix
+            push offset buff
+            call proc_print_matrix
+        jmp next_command
 
-            jmp next_command
+        handle_debug:
+            int 3
+        jmp next_command
 
     next_command:
-    int 3
     cmp cx, 0                                   ; input done? take next string
     jne parse
     call pnl                                    ; print /n

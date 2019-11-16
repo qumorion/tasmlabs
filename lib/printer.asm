@@ -52,8 +52,8 @@ proc_print_int proc near
     mov ecx, eax ; сохраняем число для проверок
     
     mov [bx], byte ptr '$'              ; Символ окончания строки
-    sub bx, 2                           ; /n = 2 БАЙТА!!!!!
-    mov [bx], word ptr 0D0Ah            ; /n
+    ;sub bx, 2                           ; /n = 2 БАЙТА!!!!!
+    ;mov [bx], word ptr 0D0Ah            ; /n
     dec bx
 
     cmp eax, 80000000h                  ; Проверяем знак
