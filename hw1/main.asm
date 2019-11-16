@@ -1,7 +1,7 @@
+LOCALS 
 .MODEL small
 .STACK 100h
 .486
-
 
 .data
 buff db 126, 128 dup(?) ;   2 байта служебные
@@ -24,6 +24,9 @@ include xmatrix.asm
 start:
     mov ax, @data
     mov ds, ax
+
+    ; TESTING!!!!
+    jmp handle_enter
 
     get_string:
     m_scan_b buff, num
@@ -49,8 +52,7 @@ start:
   
 
         handle_enter:
-        m_set_tokenizer buff, token, space_symb     ; set up di, si and ds, es, also, delimeter
-        m_enter_matrix matrix, 3, 3
+        m_enter_matrix matrix, 3, 3, buff, token
         jmp next_command
 
 

@@ -27,9 +27,6 @@ popa
 endm
 
 
-
-
-
 pnl proc near
 push ax
 push dx

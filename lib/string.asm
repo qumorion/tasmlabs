@@ -51,3 +51,21 @@ m_set_tokenizer macro string, token, delimiter ; адрес строки дол�
     add di, 2          ; skip system bytes of buffer
 
 endm
+
+m_set_matrix_tokenizer macro string_off, token_off, delimiter ; адрес строки должен быть в di
+    mov ax, @data
+    mov ds, ax
+    mov es, ax
+
+    mov di, token_off
+    xor cx, cx
+    mov cl, [di][1]  ; mov size of string
+
+    xor bx, bx
+    mov bl, token   ; save start
+    xor eax, eax
+    mov al, delimiter
+    mov di, string_off
+    add di, 2          ; skip system bytes of buffer
+
+endm

@@ -25,7 +25,7 @@ proc_scan_int proc near
         push si         ; смещение для буфера сканера строки для следующей процедуры
         call proc_scan_s    ; <- сюда
         call pnl
-
+        
         ; startCheck   
         mov bx, si 
         mov ah, 0h                       

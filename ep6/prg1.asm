@@ -17,13 +17,13 @@ start:
 
 
 mscanInt macro buffer, size, result         ; Макрос ввода целого числа на 28 бит
-local getUserInput, startParser, endParser
+local getUserInput, startParser:, endParser
     push ax
     push bx
     push dx
     push si
 
-    getUserInput:
+    getUserInput
         mov [buffer], size                  ; Размер буфера c учетом двух служебных байтов
         sub [buffer], 2
         mov dx, offset [buffer]             ; Смещение для ввода
@@ -49,11 +49,11 @@ local getUserInput, startParser, endParser
         mov bx, offset [buffer][2]          ; Введенная строка начинается со второго байта                                            
 
         cmp [buffer][2], 2Dh                ; Проверяем отрицательное ли число
-        jne startParser                     ; Если отрицательное - нужно пропустить минус
+        jne startParser:                     ; Если отрицательное - нужно пропустить минус
         inc bx
         dec cl
 
-    startParser:
+    startParser::
         mov edx, 10                         ; Уножаем на 10 перед сложением с младшим разрядом
         mul edx
         cmp eax, 80000000h                  ; Если число оказалось слишком большим,
@@ -68,7 +68,7 @@ local getUserInput, startParser, endParser
         jae getUserInput                    ; Просим ввести его снова
 
         inc bx                              ; Переходим к след. символу
-        loop startParser
+        loop startParser:
 
     cmp [buffer][2], '-'                    ; Вновь проверяем на знак
     jne endParser   
