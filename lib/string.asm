@@ -11,7 +11,7 @@ inc cx
 check_cx
 
     mov dx, di ; save start index 
-    repne scasb ; find ending of a token
+    repne scasb ; find ending of the token
     cmp cx, 0   ; if was stopped by cx, we do not need to back by 1 index
     je copy
     dec di
@@ -20,7 +20,7 @@ check_cx
     copy:
     pusha
         mov ax, di
-        sub ax, dx ; size of token
+        sub ax, dx ; size of the token
 
         mov cx, ax      ; counter
         mov [bx], ax    ; size in the token size byte

@@ -20,15 +20,10 @@ proc_scan_int proc near
     pop di ; SI, DI СТИРАЮТСЯ, SI ИСПОЛЬЗУЕТСЯ ДЛЯ ХРАНЕНИЯ АДРЕСА БУФЕРА
     pop si
     push di
-    
-    push ax
-    push bx
-    push cx
-    push dx
 
     getUserInput:
-        push si         ; смещение для буфера сканера строки
-        call proc_scan_s
+        push si         ; смещение для буфера сканера строки для следующей процедуры
+        call proc_scan_s    ; <- сюда
         call pnl
 
         ; startCheck   
@@ -71,22 +66,15 @@ proc_scan_int proc near
     neg eax
     endParser:
     mov esi,eax
-    pop dx
-    pop cx
-    pop bx
-    pop ax
-
 ret
 endp
 
 m_scan_b macro buffer, result
 pusha
 push offset buffer
-call proc_scan_int ; ОТВЕТ БЫЛ В АИКС
-push ax
+call proc_scan_int 
 mov ax, si
 mov result, al
-pop ax
 popa
 endm
 

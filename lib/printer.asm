@@ -106,14 +106,31 @@ ret
 endp 
 
 m_print_b macro buff, num
+pusha
+mov si, offset buff
+xor eax, eax
+mov al, num
+cbw 
+cwde 
+call proc_print_int
+popa
 endm
 
 m_print_w macro buff, num
+pusha
+mov si, offset buff
+xor eax, eax
+mov ax, num
+cwde
+call proc_print_int
+popa
 endm
 
 m_print_dw macro buff, num
+pusha
 mov si, offset buff
 mov eax, num
 call proc_print_int
+popa
 endm
 
