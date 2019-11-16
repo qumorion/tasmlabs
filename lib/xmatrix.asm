@@ -1,47 +1,3 @@
-_convert_string_to_byte proc near
-    @@getUserInput:
-        ; startCheck   
-        mov bx, si 
-        mov cl, [bx]                      ; Инициализируем переменную счетчика
-        xor eax, eax
-        xor edx, edx
-        inc bx
-        inc si                              ; Введенная строка начинается со второго байта                                            
-
-        cmp byte ptr [bx], 2Dh                ; Проверяем отрицательное ли число
-        jne @@startParser                     ; Если отрицательное - нужно пропустить минус
-        inc bx
-        dec cl
-
-    @@startParser:
-        mov edx, 10                         ; Уножаем на 10 перед сложением с младшим разрядом
-        mul edx
-        cmp eax, 80000000h                  ; Если число оказалось слишком большим,
-        jae @@getUserInput                    ; Просим ввести его снова
-                                               
-
-        mov dl, [bx]                        ; Получаем след символ
-        sub dl, 30h                         ; Приводим к 16 системе счисления
-
-        add eax, edx                        ; Прибавляем к конечному результату      
-        cmp eax, 80000000h                  ; Если число оказалось слишком большим,
-        jae @@GetUserInput                    ; Просим ввести его снова
-
-        inc bx                              ; Переходим к след. символу
-        loop @@startParser
-
-    mov bx, si
-    cmp byte ptr [bx][2], '-'                    ; Вновь проверяем на знак
-    jne @@endParser   
-    neg eax
-    @@endParser:
-    pop dx
-    push eax
-    push dx
-ret
-endp
-
-
 proc_enter_matrix proc near
 local @@matrix:word:1, @@buff:word:1, @@token:word:1, @@delim:byte:1, @@ret_adr:word:1, @@max_row:word:1, @@max_column:word:1, @@row:word:1, @@column:word:1
 
@@ -116,8 +72,10 @@ pusha
     push offset buff
 
     mov bx, offset matrix   ; skip sizes bytes
-    mov [bx], rows
-    mov [bx]+1, columns
+    mov al, rows
+    mov [bx], al
+    mov al, columns
+    mov [bx]+1, al
     add bx, 2
     push bx
 

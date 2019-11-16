@@ -16,6 +16,7 @@ check_cx
     cmp cx, 0   ; if was stopped by cx, we do not need to back by 1 index
     je copy
     dec di
+    inc cx
 
     copy:
     pusha
