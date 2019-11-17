@@ -4,7 +4,7 @@ LOCALS
 .486
 
 .data
-buff db 126, 128 dup(?) ;   2 байта служебные, первый - размер, второй - количество введенных пользователем
+buff db 126, 126 dup(?) ;   2 байта служебные, первый - размер, второй - количество введенных пользователем
 token db 40, 40 dup(0)
 matrix db 3,3,1,2,3,4,5,6,7,8,9, 89 dup(?)    ;   2 байта служебные, row + col
 
@@ -103,27 +103,29 @@ start:
 
 
     handle_enter:   ; ENTER MATRIX
+
             call pnl
             m_print_s q_enter_sizes
             m_scan_s buff ; get string
             m_set_tokenizer buff, token, space_symb
-
             call proc_next_token ; get rows
-        pusha
+        push si
+        push ax
             lea si, token   
             call _convert_string_to_byte ; convert to number
             mov [rows], al
-        popa
+        pop ax
+        pop si
             call proc_next_token ; get columns
             lea si, token   
             call _convert_string_to_byte ; convert to number
             mov [columns], al
-
             call pnl
             m_print_s q_enter_matrix
-            m_enter_matrix matrix, rows, columns, buff, token
             call pnl
-            jmp get_string ; skip cx checking
+            m_enter_matrix matrix, rows, columns, buff, token
+
+    jmp get_string ; skip cx checking
 
 
     handle_print:
@@ -142,7 +144,7 @@ start:
     handle_transpose:
             call pnl
             push si
-            mov si, offset matrix
+            lea si, matrix
             call proc_transpose_matrix
             m_print_s q_transpose_success
             call pnl

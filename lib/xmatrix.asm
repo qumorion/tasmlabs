@@ -18,6 +18,7 @@ endp
 proc_set_by_index proc near ; index into di:si, matrix offset in bx, num in al
 push bx
 push dx
+push ax
     mov al, [bx]    ; num of rows
     add bx, 2
     mul di
@@ -25,15 +26,14 @@ push dx
     add ax, bx
 
     mov bx, ax
-    xor ax, ax
-    mov al, [bx]  ;   result
+pop ax
+    mov [bx], al  ;   result
 pop dx
 pop bx
 ret
 endp
 
 proc_print_matrix proc near     ;ПРИНИМАЕТ АДРЕС МАТРИЦЫ В si, АДРЕС БУФЕРА В di
-int 3
 enter 4, 0
 local @@matrix:word:1, @@buff:word:1
     mov @@matrix, si
@@ -42,7 +42,7 @@ local @@matrix:word:1, @@buff:word:1
 pusha
     mov bx, @@matrix
     mov di, 0
-
+    int 3
     @@next_row:
     call pnl
     xor ax, ax
@@ -165,63 +165,78 @@ endp
 
 
 proc_enter_matrix proc near
-local @@matrix:word:1, @@buff:word:1, @@token:word:1, @@delim:byte:1, @@ret_adr:word:1, @@max_row:word:1, @@max_column:word:1, @@row:word:1, @@column:word:1
+enter 15, 0
+pusha
+local @@matrix:word:1, @@buff:word:1, @@token:word:1, @@delim:byte:1, @@max_row:word:1, @@max_column:word:1, @@_di:word:1, @@_si:word:1
 
-    pop @@ret_adr
-    pop @@matrix
-    pop @@buff
-    pop @@token
-    pop @@max_row
-    pop @@max_column
+    mov @@matrix, bx        
+    mov @@buff, si         
+    mov @@token, di       
     mov @@delim, ' '
-    mov @@row, 0
-    mov @@column, 0
+    xor dx, dx
+    mov dl, ah
+    mov @@max_row, dx
+    mov dl, al
+    mov @@max_column, dx
 
+    mov [bx], ah
+    mov [bx][1], al
+    mov di, 0
+    int 3
 
     next_row:
-        mov bx, @@row
-        cmp bx, @@max_row
+        xor eax, eax
+        cmp di, @@max_row
         jae end_enter
-        call pnl
 
         push @@buff
         call proc_scan_s
-
+        push di
+        push si
         m_set_matrix_tokenizer @@buff, @@token, @@delim
-        mov @@column, 0
+        mov @@_di, di
+        mov @@_si, si
+        pop si
+        pop di
+
+        call pnl         
+        mov si, 0
     next_column:
-
-    push di
-        mov di, @@column
-        cmp di, @@max_column
+        cmp si, @@max_column
         je end_row
-    pop di
 
+        push si
+        push di
+        mov si, @@_si
+        mov di, @@_di
         call proc_next_token
+        mov @@_di, di
+        mov @@_si, si
+        pop di
+        pop si
 
-    pusha    
-        ; getting adress
-        xor eax, eax
-        mov ax, @@max_column
-        mul @@row
-        add ax, @@column
-        add ax, @@matrix    ; full offset
+        ; adding next number
+        push eax
+        push bx
+        push si
+            mov si, @@token
+            mov bx, @@matrix
+            call _convert_string_to_byte
+        pop si
+            call proc_set_by_index
+        pop bx
+        pop eax
 
-        mov bx, ax
-        mov si, @@token
-        call _convert_string_to_byte
-        mov [bx], al        ; mov next number
-    popa
-
-        inc @@column
+        inc si
     jmp next_column
 
     end_row:
-        inc @@row
+        inc di
         jmp next_row
 
     end_enter:
-push @@ret_adr
+popa
+leave
 ret 
 endp
 
@@ -229,22 +244,11 @@ endp
 
 m_enter_matrix macro matrix, rows, columns, buff, token
 pusha
-    xor eax, eax
+    lea bx, [matrix]
+    lea si, [buff]
+    lea di, [token]
+    mov ah, rows
     mov al, columns
-    push ax
-    mov al, rows
-    push ax
-    push offset token
-    push offset buff
-
-    mov bx, offset matrix   ; skip sizes bytes
-    mov al, rows
-    mov [bx], al
-    mov al, columns
-    mov [bx]+1, al
-    add bx, 2
-    push bx
-
     call proc_enter_matrix
 popa
 endm
