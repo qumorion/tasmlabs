@@ -7,6 +7,7 @@
 proc_get_by_index proc near ; index into di:si, matrix offset in bx, result in al
 push bx
 push dx
+    xor ax, ax
     mov al, [bx]    ; num of rows
     add bx, 2
     mul di
@@ -25,6 +26,7 @@ proc_set_by_index proc near ; index into di:si, matrix offset in bx, num in al
 push bx
 push dx
 push ax
+    xor ax, ax
     mov al, [bx]    ; num of rows
     add bx, 2
     mul di
@@ -52,7 +54,6 @@ local @@matrix:word:1, @@buff:word:1
 pusha
     mov bx, @@matrix
     mov di, 0
-    int 3
     @@next_row:
     call pnl
     xor ax, ax
@@ -198,7 +199,6 @@ local @@matrix:word:1, @@buff:word:1, @@token:word:1, @@delim:byte:1, @@max_row:
     mov [bx], ah
     mov [bx][1], al
     mov di, 0
-    int 3
 
     next_row:
         xor eax, eax

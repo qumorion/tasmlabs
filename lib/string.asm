@@ -69,17 +69,20 @@ endm
 
 ; ПЕРЕД ИСПОЛЬЗОВАНИЕМ ВЫЗОВИТЕ ОДИН ИЗ МАКРОСОВ НИЖЕ!!!
 proc_next_token proc near
-repe scasb ;skip spaces
-dec di
-inc cx
-cmp cx, 0
+int 3
+jecxz stop_parse
+
+repz scasb ;skip spaces
 je stop_parse
+inc cx
+dec di
+
+end_skip:
 
     mov dx, di ; save start index 
     repne scasb ; find ending of the token
     
-    cmp cx, 0   ; if was stopped by cx, we do not need to back by 1 index
-    je copy
+    jne copy
     dec di
     inc cx
 
@@ -154,8 +157,8 @@ local @@_ret:word:1
         mov cl, [bx]                      ; Инициализируем переменную счетчика
         xor eax, eax
         xor edx, edx
-        inc bx
-        inc si                            ; Введенная строка начинается со второго байта                                            
+        inc bx                            ; Введенная строка начинается со второго байта  
+        ;inc si                                                                      
 
         cmp byte ptr [bx], 2Dh            ; Проверяем отрицательное ли число
         jne @@startParser                 ; Если отрицательное - нужно пропустить минус
@@ -180,7 +183,7 @@ local @@_ret:word:1
         loop @@startParser
 
     mov bx, si
-    cmp byte ptr [bx][2], '-'             ; Вновь проверяем на знак
+    cmp byte ptr [bx][1], '-'             ; Вновь проверяем на знак
     jne @@endParser   
     neg eax                               ; Если есть минус - переводим в дополнительный код
     @@endParser:

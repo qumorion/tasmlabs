@@ -35,6 +35,7 @@ columns db 0
 include io.asm          ; Содержит процедуры для ввода-вывода чисел, объединяет в себя scanner и printer
 include string.asm      ; Предназначен для работы со строками, пока что содержит сравниватель и токенайзер
 include xmatrix.asm     ; Для работы с матрицами
+include task.asm        ; Задание варианта
 
 start:
     mov ax, @data
@@ -139,6 +140,7 @@ start:
 
 
     handle_debug:
+            int 3
     jmp next_command
 
     handle_transpose:
