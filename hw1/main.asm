@@ -128,9 +128,11 @@ start:
 
     handle_print:
             call pnl
-            push offset matrix
-            push offset buff
+            pusha
+            lea si, [matrix]
+            lea di, [buff]
             call proc_print_matrix
+            popa
     jmp next_command
 
 

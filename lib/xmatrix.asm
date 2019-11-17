@@ -19,9 +19,8 @@ ret
 endp
 
 proc_get_by_index proc near ; index into di:si, matrix offset in bx, result in al
-local @@_ret:word:1
-pop @@_ret
 push bx
+push dx
     mov al, [bx]    ; num of rows
     add bx, 2
     mul di
@@ -31,22 +30,21 @@ push bx
     mov bx, ax
     xor ax, ax
     mov al, [bx]  ;   result
-
+pop dx
 pop bx
-push @@_ret
 ret
 endp
 
-proc_print_matrix proc near
-local @@matrix:word:1, @@buff:word:1, @@ret_:word:1
-    pop @@ret_
-    pop @@buff
-    pop @@matrix
+proc_print_matrix proc near     ;ПРИНИМАЕТ АДРЕС МАТРИЦЫ В si, АДРЕС БУФЕРА В di
+int 3
+enter 4, 0
+local @@matrix:word:1, @@buff:word:1
+    mov @@matrix, si
+    mov @@buff, di
 
-    pusha
-        mov bx, @@matrix
-        mov di, 0
-        mov si, 0
+pusha
+    mov bx, @@matrix
+    mov di, 0
 
     @@next_row:
     call pnl
@@ -61,15 +59,14 @@ local @@matrix:word:1, @@buff:word:1, @@ret_:word:1
         cmp si, ax
         jae @@end_column
 
-        call proc_get_by_index  ;   get element
-
+        call proc_get_by_index  ;   get element ;   НИЧЕГО НЕ ПОРТИТ?
         ; PRINTING ELEMENT
         pusha
         mov si, @@buff
         cbw 
         cwde 
         call proc_print_int
-
+        
         mov ah, 2
         mov dl, ' '
         int 21h
@@ -82,10 +79,9 @@ local @@matrix:word:1, @@buff:word:1, @@ret_:word:1
     inc di
     jmp @@next_row
 
-    popa
-
 @@end_print:
-push @@ret_
+popa
+leave
 ret
 endp
 
