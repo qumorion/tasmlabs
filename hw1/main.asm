@@ -1,12 +1,12 @@
 LOCALS 
 .MODEL small
-.STACK 100h
+.STACK 500
 .486
 
 .data
 buff db 126, 128 dup(?) ;   2 байта служебные, первый - размер, второй - количество введенных пользователем
-token db 40, 40 dup(?)
-matrix db 102 dup(?)    ;   2 байта служебные, row + col
+token db 40, 40 dup(0)
+matrix db 3,3,1,2,3,4,5,6,7,8,9, 89 dup(?)    ;   2 байта служебные, row + col
 
 ; ЗДЕСЬ НАХОДЯТСЯ СТРОКИ ДЛЯ ВЗАИМОДЕЙСТВИЯ С ПОЛЬЗОВАТЕЛЕМ, ВКЛЮЧАЯ КОМАНДЫ МЕНЮ
 q_command db '> $'
@@ -14,19 +14,22 @@ q_exit db 4, 'exit'
 q_enter db 5, 'enter'
 q_enter_sizes db 'Please, enter matrix sizes: $'
 q_enter_matrix db 'Please, enter rows of matrix: $'
-q_draw db 4, 'draw'
+q_print db 5, 'print'
+q_debug db 5, 'debug'
+q_transpose db 9, 'transpose'
+q_transpose_success db 'matrix was transposed!$'
+
 q_search db 6, 'search'
 q_less db 4, 'less'
-q_nonzero db 7, 'nonzero'
-q_debug db 5, 'debug'
+q_nzstrings db 9, 'nzstrings'
+q_sum db 3, 'sum'
+
 
 space_symb db ' '
 rows db 0
 columns db 0
 
-
-
-
+; ###########################################################################################################
 
 .code
 include io.asm          ; Содержит процедуры для ввода-вывода чисел, объединяет в себя scanner и printer
@@ -57,14 +60,31 @@ start:
         ; je handle_my_command
         is_equal token, q_enter
         je handle_enter
-        is_equal token, q_draw
-        je handle_draw
+        is_equal token, q_print
+        je handle_print
         is_equal token, q_debug
         je handle_debug
+        is_equal token, q_transpose
+        je handle_transpose
+
+        ; ОТДЕЛЬНАЯ ЛОГИКА ДЛЯ ВЛОЖЕННОЙ КОМАНДЫ 'SEARCH'
+        is_equal token, q_search
+        jne end_search
+
+        call proc_next_token
+        is_equal token, q_less
+        je handle_less
+        is_equal token, q_nzstrings
+        je handle_nzstrings
+        is_equal token, q_sum
+        je handle_sum
+
+        end_search:
         jmp next_command
 
 
-; ==========================================================================================================
+
+; ###########################################################################################################
         ; ЗДЕСЬ МОЖНО ДОБАВЛЯТЬ ЛОГИКУ ИСПОЛНЯЕМЫХ КОМАНД.
         ; НУЖНО УКАЗАТЬ ВЫБРАННУЮ МЕТКУ, А В КОНЦЕ ДОБАВИТЬ ПЕРЕХОД НА next_command
 
@@ -92,13 +112,11 @@ start:
         pusha
             lea si, token   
             call _convert_string_to_byte ; convert to number
-            pop eax
             mov [rows], al
         popa
             call proc_next_token ; get columns
             lea si, token   
             call _convert_string_to_byte ; convert to number
-            pop eax
             mov [columns], al
 
             call pnl
@@ -108,7 +126,7 @@ start:
             jmp get_string ; skip cx checking
 
 
-    handle_draw:
+    handle_print:
             call pnl
             push offset matrix
             push offset buff
@@ -117,8 +135,33 @@ start:
 
 
     handle_debug:
-            int 3
     jmp next_command
+
+    handle_transpose:
+            call pnl
+            push si
+            mov si, offset matrix
+            call proc_transpose_matrix
+            m_print_s q_transpose_success
+            call pnl
+            pop si
+    jmp next_command
+
+    handle_less:
+            call proc_next_token
+            push si
+            lea si, token
+            call _convert_string_to_byte
+
+            mov ax, si
+    jmp next_command
+
+    handle_nzstrings:
+    jmp next_command
+
+    handle_sum:
+    jmp next_command
+
 
 
     next_command:
