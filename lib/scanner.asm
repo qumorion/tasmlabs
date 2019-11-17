@@ -75,8 +75,8 @@ proc_scan_int proc near ; ВМЕСТО ПРОЦЕДУРЫ, ИСПОЛЬЗУЙТ�
 ret
 endp
 
-m_scan_b macro buffer, result
-pusha
+m_scan_b macro buffer, result           ;   ИСПОЛЬЗУЙТЕ ОДИН ИЗ ТРЕХ МАКРОСОВ, 
+pusha                                   ;   ДЛЯ ПОЛУЧЕНИЯ ЧИСЛА НУЖНОГО РАЗМЕРА
 push offset buffer
 call proc_scan_int 
 mov ax, si

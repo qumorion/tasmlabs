@@ -1,3 +1,9 @@
+;МОДУЛЬ ТРЕБУЕТ INCLUDE IO.ASM !!!
+
+
+
+; ПРОЦЕДУРЫ ДЛЯ ЗАПИСИ/ЧТЕНИЯ ЭЛЕМЕНТА ИЗ МАТРИЦЫ.
+; НОМЕР СТРОКИ И СТОЛБЦА ЗАНОСЯТСЯ В di:si, АДРЕС МАТРИЦЫ В bx, ЧИСЛО ЗАНОСИТСЯ В al
 proc_get_by_index proc near ; index into di:si, matrix offset in bx, result in al
 push bx
 push dx
@@ -33,6 +39,10 @@ pop bx
 ret
 endp
 
+
+; ############################################################################################################################
+
+
 proc_print_matrix proc near     ;ПРИНИМАЕТ АДРЕС МАТРИЦЫ В si, АДРЕС БУФЕРА В di
 enter 4, 0
 local @@matrix:word:1, @@buff:word:1
@@ -56,7 +66,7 @@ pusha
         cmp si, ax
         jae @@end_column
 
-        call proc_get_by_index  ;   get element ;   НИЧЕГО НЕ ПОРТИТ?
+        call proc_get_by_index  ;   get element 
         ; PRINTING ELEMENT
         pusha
         mov si, @@buff
@@ -83,8 +93,11 @@ ret
 endp
 
 
+; ############################################################################################################################
+
+
 proc_transpose_matrix proc near     ;(c) maxim
-;in: si - адресс матрицы
+;in: si - адресс матрицы, с размерами в первых друх байтах: row, column
 ;out: ____
 	local @@temp:word:1
 	push ax
@@ -164,9 +177,12 @@ ret
 endp
 
 
-proc_enter_matrix proc near
-enter 15, 0
-pusha
+; ############################################################################################################################
+
+
+proc_enter_matrix proc near ;   ВМЕСТО ПРОЦЕДУРЫ ИСПОЛЬЗУЙТЕ МАКРОС НИЖЕ
+enter 15, 0                 ;   ЗДЕСЬ ПОЛУЧИЛОСЬ ДОВОЛЬНО МНОГО КОДА ИЗ-ЗА ТОГО, ЧТО 3 ПРОЦЕДУРЫ ИСПОЛЬЗУЮТ
+pusha                       ;   ОДНИ И ТЕ ЖЕ РЕГИСТРЫ ПО-РАЗНОМУ. ПРИШЛОСЬ МНОГОЕ ПЕРЕСОХРАНЯТЬ.
 local @@matrix:word:1, @@buff:word:1, @@token:word:1, @@delim:byte:1, @@max_row:word:1, @@max_column:word:1, @@_di:word:1, @@_si:word:1
 
     mov @@matrix, bx        
@@ -239,7 +255,6 @@ popa
 leave
 ret 
 endp
-
 
 
 m_enter_matrix macro matrix, rows, columns, buff, token
