@@ -1,8 +1,6 @@
-proc_set_by_index proc near ; index into di:si, matrix offset in bx, num in al
-local @@_ret:word:1
-pop @@_ret
+proc_get_by_index proc near ; index into di:si, matrix offset in bx, result in al
 push bx
-push ax
+push dx
     mov al, [bx]    ; num of rows
     add bx, 2
     mul di
@@ -10,15 +8,14 @@ push ax
     add ax, bx
 
     mov bx, ax
-    pop ax
-    mov [bx], al  ;   result
-
+    xor ax, ax
+    mov al, [bx]  ;   result
+pop dx
 pop bx
-push @@_ret
 ret
 endp
 
-proc_get_by_index proc near ; index into di:si, matrix offset in bx, result in al
+proc_set_by_index proc near ; index into di:si, matrix offset in bx, num in al
 push bx
 push dx
     mov al, [bx]    ; num of rows
