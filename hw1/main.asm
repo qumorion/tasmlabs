@@ -11,6 +11,7 @@ matrix db 3,3,1,2,3,4,5,6,7,8,9, 89 dup(?)    ;   2 байта служебны�
 ; ЗДЕСЬ НАХОДЯТСЯ СТРОКИ ДЛЯ ВЗАИМОДЕЙСТВИЯ С ПОЛЬЗОВАТЕЛЕМ, ВКЛЮЧАЯ КОМАНДЫ МЕНЮ
 q_command db '> $'
 q_exit db 4, 'exit'
+q_result db 'result: $'
 q_enter db 5, 'enter'
 q_enter_sizes db 'Please, enter matrix sizes: $'
 q_enter_matrix db 'Please, enter rows of matrix: $'
@@ -28,6 +29,7 @@ q_sum db 3, 'sum'
 space_symb db ' '
 rows db 0
 columns db 0
+num dw 0
 
 ; ###########################################################################################################
 
@@ -138,12 +140,18 @@ _6:
         _6_1:
                 is_equal token, q_less
                 jne _6_2
+                        call pnl
                         call proc_next_token
                         push si
                         lea si, token
                         call _convert_string_to_byte
-
-                        mov ax, si
+                        lea bx, [matrix]
+                        int 3
+                        call proc_find_less_num
+                        mov num, ax
+                        m_print_s q_result
+                        m_print_w buff, num
+                        call pnl
                 ; ПОИСК ЭЛЕМЕНТОВ В КАЖД. СТРОКЕ МАТРИЦЫ, МЕНЬШЕ ВВЕДЕННОГО ЗНАЧЕНИЯ
 
         _6_2:

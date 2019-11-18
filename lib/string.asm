@@ -69,7 +69,6 @@ endm
 
 ; ПЕРЕД ИСПОЛЬЗОВАНИЕМ ВЫЗОВИТЕ ОДИН ИЗ МАКРОСОВ НИЖЕ!!!
 proc_next_token proc near
-int 3
 jecxz stop_parse
 
 repz scasb ;skip spaces
