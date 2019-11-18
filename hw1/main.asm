@@ -44,6 +44,7 @@ start:
     mov ds, ax
 
     get_string:
+        call pnl
         m_print_s q_command
         m_scan_s buff                               ; read string from console
         m_set_tokenizer buff, token, space_symb     ; set up di, si and ds, es, also, delimeter
@@ -146,24 +147,29 @@ _6:
                         lea si, token
                         call _convert_string_to_byte
                         lea bx, [matrix]
-                        int 3
+                        lea dx, [buff]
                         call proc_find_less_num
-                        mov num, ax
-                        m_print_s q_result
-                        m_print_w buff, num
-                        call pnl
                 ; ПОИСК ЭЛЕМЕНТОВ В КАЖД. СТРОКЕ МАТРИЦЫ, МЕНЬШЕ ВВЕДЕННОГО ЗНАЧЕНИЯ
 
         _6_2:
                 is_equal token, q_nzstrings
                 jne get_string  ; skip other parameters
-
+                        call pnl
+                        m_print_s q_result
+                        lea bx, [matrix]
+                        lea dx, [buff]
+                        call proc_find_nonzero        
                 jmp get_string  ; skip other parameters
                 ; ПОДСЧЕТ НЕНУЛЕВЫХ СТРОК МАТРИЦ
 
 _7:
         is_equal token, q_sum
         jne _8
+                call pnl
+                m_print_s q_result
+                lea bx, [matrix]
+                lea dx, [buff]
+                call proc_find_sum
         ; СУММА ЭЛЕМЕНТОВ МАТРИЦЫ ПОД ГЛАВНОЙ ДИАГОНАЛЬЮ 
 _8:
         
