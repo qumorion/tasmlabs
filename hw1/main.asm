@@ -48,137 +48,124 @@ start:
 
     parse:
         call proc_next_token                        ; get word from string
-
+; ###########################################################################################################
 
         ; ЗДЕСЬ НАХОДИТСЯ ОСНОВНАЯ ЛОГИКА ИНТЕРФЕЙСА. 
         ; ТОКЕНАЙЗЕР РАЗБИРАЕТ СТРОКУ НА ОТДЕЛЬНЫЕ СЛОВА, ПОСЛЕ ЧЕГО 
         ; ЗДЕСЬ ПРОИСХОДИТ ИХ СРАВНЕНИЕ НА СОВПАДЕНИЕ С КОМАНДОЙ.
-        is_equal token, q_exit ; В ЭТУ СЕКЦИЮ МОЖНО ДОБАВЛЯТЬ ПРОВЕРКУ НА КОМАНДУ. СРАВНЕНИЕ УЖЕ НАСТРОЕНО.
-        je handle_exit         ; ЗДЕСЬ НУЖНО УКАЗАТЬ МЕТКУ, ВЫБРАННУЮ ДЛЯ ИСПОЛНЕНИЯ КОМАНДЫ.
-                               ; САМО ИСПОЛНЕНИЕ ОПИСЫВАЕТСЯ НИЖЕ
-        ; ПРИМЕР:
-        ; is_equal token, my_command
-        ; je handle_my_command
-        is_equal token, q_enter
-        je handle_enter
-        is_equal token, q_print
-        je handle_print
-        is_equal token, q_debug
-        je handle_debug
-        is_equal token, q_transpose
-        je handle_transpose
 
-        ; ОТДЕЛЬНАЯ ЛОГИКА ДЛЯ ВЛОЖЕННОЙ КОМАНДЫ 'SEARCH'
-        is_equal token, q_search
-        jne end_search
-
-        call proc_next_token
-        is_equal token, q_less
-        je handle_less
-        is_equal token, q_nzstrings
-        je handle_nzstrings
-        is_equal token, q_sum
-        je handle_sum
-
-        end_search:
-        jmp next_command
-
-
-
-; ###########################################################################################################
         ; ЗДЕСЬ МОЖНО ДОБАВЛЯТЬ ЛОГИКУ ИСПОЛНЯЕМЫХ КОМАНД.
-        ; НУЖНО УКАЗАТЬ ВЫБРАННУЮ МЕТКУ, А В КОНЦЕ ДОБАВИТЬ ПЕРЕХОД НА next_command
-
-        ; ЕСЛИ ВЫ РАБОТАЛИ С ВВОДОМ-ВЫВОДОМ, ТО В КОНЦЕ МОЖНО ДЕЛАТЬ ПЕРЕХОД НА get_string, НО ЕСЛИ
-        ; В СТРОКЕ С КОМАНДАМИ БЫЛИ И ДРУГИЕ КОМАНДЫ, ТО ОНИ НЕ БУДУТ ВЫПОЛНЕНЫ
+        ; НУЖНО УКАЗАТЬ СЛЕДУЮЩУЮ ПО НОМЕРУ МЕТКУ, А В КОНЦЕ КЕЙСА МОЖНО ДОБАВИТЬ ПЕРЕХОД НА next_command.
+        ; ЕСЛИ ВЫ РАБОТАЛИ С ВВОДОМ-ВЫВОДОМ, ТО ВМЕСТО next_command МОЖНО ДЕЛАТЬ ПЕРЕХОД НА get_string, - 
+        ; - ЭТО ПРЕДОТВРАТИТ ВЫПОНЕНИЕ ДРУГИХ КОМАНД В СТРОКЕ
 
         ;ПРИМЕР:
-        ;       handle_my_command:
+        ; _x:                                   <= здесь номер вашего кейса
+        ;       is_equal token, q_mycommand
+        ;       jne _(x+1)                      <= в случае несовпадения, напишите переход на след. кейс
         ;       ... (code)
-        ;       jmp next_command
+        ;       jmp next_command                <= в конце можно поставить "break"
+        ;       ; Умножение матрицы             <= обязательно напишите, что делает ваш кейс
+_1:
+        is_equal token, q_exit
+        jne _2                                    
+                call pnl
+                mov ax, 4C00h
+                int 21h
+        ; ВЫХОД ИЗ ПРОГРАММЫ
+_2:
+        is_equal token, q_enter
+        jne _3
+                call pnl
+                m_print_s q_enter_sizes
+                m_scan_s buff ; get string
+                m_set_tokenizer buff, token, space_symb
+                call proc_next_token ; get rows
+                push si
+                push ax
+                lea si, token   
+                call _convert_string_to_byte ; convert to number
+                mov [rows], al
+                pop ax
+                pop si
+                call proc_next_token ; get columns
+                lea si, token   
+                call _convert_string_to_byte ; convert to number
+                mov [columns], al
+                call pnl
+                m_print_s q_enter_matrix
+                call pnl
+                m_enter_matrix matrix, rows, columns, buff, token
+        jmp get_string ; skip cx checking
+        ; ВВОД ПРОИЗВОЛЬНОЙ МАТРИЦЫ ЧЕРЕЗ КОНСОЛЬ
 
-    handle_exit:    ; shut down program                                       
-            call pnl
-            mov ax, 4C00h
-            int 21h
+_3:
+        is_equal token, q_print
+        jne _4
+                call pnl
+                pusha
+                lea si, [matrix]
+                lea di, [buff]
+                call proc_print_matrix
+                popa
+        ; ВЫВОД МАТРИЦЫ В КОНСОЛЬ
 
+_4:
+        is_equal token, q_debug
+        jne _5
+                    int 3
+        ; ВЫЗОВ ОТЛАДЧИКА (ЕСЛИ ТОТ БЫЛ ЗАПУЩЕН)
 
-    handle_enter:   ; ENTER MATRIX
+_5:
+        is_equal token, q_transpose
+        jne _6
+                    call pnl
+                    push si
+                    lea si, matrix
+                    call proc_transpose_matrix
+                    m_print_s q_transpose_success
+                    call pnl
+                    pop si
+        ; ТРАНСПОНИРОВАНИЕ МАТРИЦЫ
 
-            call pnl
-            m_print_s q_enter_sizes
-            m_scan_s buff ; get string
-            m_set_tokenizer buff, token, space_symb
-            call proc_next_token ; get rows
-        push si
-        push ax
-            lea si, token   
-            call _convert_string_to_byte ; convert to number
-            mov [rows], al
-        pop ax
-        pop si
-            call proc_next_token ; get columns
-            lea si, token   
-            call _convert_string_to_byte ; convert to number
-            mov [columns], al
-            call pnl
-            m_print_s q_enter_matrix
-            call pnl
-            m_enter_matrix matrix, rows, columns, buff, token
+_6:
+        ; ОТДЕЛЬНАЯ ЛОГИКА ДЛЯ КОМПЛЕКСНОЙ КОМАНДЫ 'SEARCH'
+        is_equal token, q_search
+        jne _7
+                call proc_next_token
+                jmp _6_1
 
-    jmp get_string ; skip cx checking
+        _6_1:
+                is_equal token, q_less
+                jne _6_2
+                        call proc_next_token
+                        push si
+                        lea si, token
+                        call _convert_string_to_byte
 
+                        mov ax, si
+                ; ПОИСК ЭЛЕМЕНТОВ В КАЖД. СТРОКЕ МАТРИЦЫ, МЕНЬШЕ ВВЕДЕННОГО ЗНАЧЕНИЯ
 
-    handle_print:
-            call pnl
-            pusha
-            lea si, [matrix]
-            lea di, [buff]
-            call proc_print_matrix
-            popa
-    jmp next_command
+        _6_2:
+                is_equal token, q_nzstrings
+                jne get_string  ; skip other parameters
 
+                jmp get_string  ; skip other parameters
+                ; ПОДСЧЕТ НЕНУЛЕВЫХ СТРОК МАТРИЦ
 
-    handle_debug:
-            int 3
-    jmp next_command
+_7:
+        is_equal token, q_sum
+        jne _8
+        ; СУММА ЭЛЕМЕНТОВ МАТРИЦЫ ПОД ГЛАВНОЙ ДИАГОНАЛЬЮ 
+_8:
+        
 
-    handle_transpose:
-            call pnl
-            push si
-            lea si, matrix
-            call proc_transpose_matrix
-            m_print_s q_transpose_success
-            call pnl
-            pop si
-    jmp next_command
-
-    handle_less:
-            call proc_next_token
-            push si
-            lea si, token
-            call _convert_string_to_byte
-
-            mov ax, si
-    jmp next_command
-
-    handle_nzstrings:
-    jmp next_command
-
-    handle_sum:
-    jmp next_command
-
-
-
-    next_command:
-    cmp cx, 0                                   ; input done? take next string
-    jne parse
-    call pnl                                    ; print /n
-    jmp get_string
+next_command:
+cmp cx, 0                                   ; input done? take next string
+jne parse
+call pnl                                    ; print /n
+jmp get_string
     
-
-
-
 
     
 end start
