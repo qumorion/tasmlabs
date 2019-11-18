@@ -7,6 +7,7 @@ LOCALS
 buff db 126, 126 dup(?) ;   2 байта служебные, первый - размер, второй - количество введенных пользователем
 token db 40, 40 dup(0)
 matrix db 3,3,1,2,3,4,5,6,7,8,9, 89 dup(?)    ;   2 байта служебные, row + col
+edited_string db 100, 100 dup(?), 'err$'
 
 ; ЗДЕСЬ НАХОДЯТСЯ СТРОКИ ДЛЯ ВЗАИМОДЕЙСТВИЯ С ПОЛЬЗОВАТЕЛЕМ, ВКЛЮЧАЯ КОМАНДЫ МЕНЮ
 q_command db '> $'
@@ -19,6 +20,7 @@ q_print db 5, 'print'
 q_debug db 5, 'debug'
 q_transpose db 9, 'transpose'
 q_transpose_success db 'matrix was transposed!$'
+q_labwork_8 db 8, 'labwork8'
 
 q_search db 6, 'search'
 q_less db 4, 'less'
@@ -172,6 +174,94 @@ _6:
                 ; СУММА ЭЛЕМЕНТОВ МАТРИЦЫ ПОД ГЛАВНОЙ ДИАГОНАЛЬЮ 
 
 _7:
+        is_equal token, q_labwork_8
+        jne _8
+                call pnl
+                m_scan_s buff                              
+                m_set_tokenizer buff, token, space_symb     ; set up di, si and ds, es, also, delimeter in al
+                mov [num], 0
+                mov [edited_string], 0
+                mov [edited_string][1], '$'
+                begin_split:
+                        cmp cx, 0
+                        je end_split
+
+                        inc [num]
+
+                        call proc_next_token
+                        int 3
+                        ;check for numbers
+                        pusha
+                                xor cx, cx
+                                xor bx, bx
+                                lea bx, [token]
+                                mov cl, [token]
+
+                                num_check:
+                                cmp cx, 0
+                                je end_num_ok
+
+                                inc bx
+                                dec cx
+                                cmp [bx], byte ptr '0'
+                                jb num_check
+                                cmp [bx], byte ptr '9'
+                                ja num_check
+                                jmp end_dum_no
+
+                                end_dum_no:
+                                popa
+                                jmp begin_split
+
+                                end_num_ok:
+                                popa
+                        
+                        ; copy
+                        pusha
+                                xor ax, ax
+                                lea si, [token]
+                                inc si ; skip size
+                                lea di, [edited_string]
+                                add di, 1
+                                mov al, [edited_string]
+                                add di, ax
+                                mov al, [token]
+                                xor cx, cx
+                                mov cl, al
+                                inc al ; space
+                                add [edited_string], al
+                                rep movsb
+                                mov [di], byte ptr ' '
+                                mov [di][1], byte ptr '$'
+                        popa
+                        ; print
+                        push bx 
+                                xor bx, bx
+                                mov bl, [token]
+                                inc bx
+                                mov [token][bx], '$'
+                                mov [token], ' '
+                                call pnl
+                                m_print_s token
+                        pop bx
+                        jmp begin_split
+
+                end_split:
+                call pnl
+                push ax               ; вывод отредактированной строки
+                push dx
+                mov  ah, 9
+                mov  dx, offset [edited_string]
+                inc dx
+                int  21h
+                pop  dx
+                pop  ax
+                call pnl
+                m_print_s q_result
+                m_print_w buff, num
+
+
+_8:
     
         
 
