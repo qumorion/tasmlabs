@@ -153,25 +153,26 @@ _6:
 
         _6_2:
                 is_equal token, q_nzstrings
-                jne get_string  ; skip other parameters
+                jne _6_3  ; skip other parameters
                         call pnl
                         m_print_s q_result
                         lea bx, [matrix]
                         lea dx, [buff]
                         call proc_find_nonzero        
-                jmp get_string  ; skip other parameters
                 ; ПОДСЧЕТ НЕНУЛЕВЫХ СТРОК МАТРИЦ
 
+        _6_3:
+                is_equal token, q_sum
+                jne get_string ; skip other parameters
+                        call pnl
+                        m_print_s q_result
+                        lea bx, [matrix]
+                        lea dx, [buff]
+                        call proc_find_sum
+                ; СУММА ЭЛЕМЕНТОВ МАТРИЦЫ ПОД ГЛАВНОЙ ДИАГОНАЛЬЮ 
+
 _7:
-        is_equal token, q_sum
-        jne _8
-                call pnl
-                m_print_s q_result
-                lea bx, [matrix]
-                lea dx, [buff]
-                call proc_find_sum
-        ; СУММА ЭЛЕМЕНТОВ МАТРИЦЫ ПОД ГЛАВНОЙ ДИАГОНАЛЬЮ 
-_8:
+    
         
 
 next_command:
