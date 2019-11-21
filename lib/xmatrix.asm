@@ -11,6 +11,7 @@ push dx
     mov al, [bx]    ; num of rows
     add bx, 2
     mul di
+    ;mul 2
     add ax, si
     add ax, bx
 
@@ -30,6 +31,7 @@ push ax
     mov al, [bx]    ; num of rows
     add bx, 2
     mul di
+    ;mul 2
     add ax, si
     add ax, bx
 

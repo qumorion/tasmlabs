@@ -6,7 +6,7 @@ LOCALS
 .data
 buff db 126, 126 dup(?) ;   2 байта служебные, первый - размер, второй - количество введенных пользователем
 token db 40, 40 dup(0)
-matrix db 3,3,1,2,3,4,5,6,7,8,9, 89 dup(?)    ;   2 байта служебные, row + col
+matrix dw 3,3,1,2,3,4,5,6,7,8,9, 91 dup(?)    ;   2 байта служебные, row + col
 edited_string db 100, 100 dup(?), 'err$'
 
 ; ЗДЕСЬ НАХОДЯТСЯ СТРОКИ ДЛЯ ВЗАИМОДЕЙСТВИЯ С ПОЛЬЗОВАТЕЛЕМ, ВКЛЮЧАЯ КОМАНДЫ МЕНЮ
@@ -21,6 +21,15 @@ q_debug db 5, 'debug'
 q_transpose db 9, 'transpose'
 q_transpose_success db 'matrix was transposed!$'
 q_labwork_8 db 8, 'labwork8'
+q_help db 4, 'help'
+
+q_manual_1 db 'enter - enter matrix from keyboard','$'
+q_manual_2 db 'print - print matrix into console','$'
+q_manual_3 db 'transpose -  transpose matrix','$'
+q_manual_4 db 'search less - print a num of elements to be less than a entered value for every row of matrix','$'
+q_manual_5 db 'search nzstrings - count a num of non-zero strings of matrix','$'
+q_manual_6 db 'search sum - get sum of matrix elements under the main diagonal','$'
+q_manual_7 db 'exit - shut down the program', '$'
 
 q_search db 6, 'search'
 q_less db 4, 'less'
@@ -44,8 +53,11 @@ include task.asm        ; Задание варианта
 start:
     mov ax, @data
     mov ds, ax
+   ;call proc_cls
+   ;m_set_cursor 1, 0
 
     get_string:
+
         call pnl
         m_print_s q_command
         m_scan_s buff                               ; read string from console
@@ -189,7 +201,24 @@ _7:
                         inc [num]
 
                         call proc_next_token
-                        int 3
+
+                        ; print
+                        push bx 
+                                xor bx, bx
+                                mov bl, [token]
+                                inc bx
+                                mov [token][bx], '$'
+                                call pnl
+                                push ax  
+                                push dx
+                                mov  ah, 9
+                                lea dx, [token]
+                                inc dx
+                                int  21h
+                                pop  dx
+                                pop  ax
+                        pop bx
+
                         ;check for numbers
                         pusha
                                 xor cx, cx
@@ -234,16 +263,6 @@ _7:
                                 mov [di], byte ptr ' '
                                 mov [di][1], byte ptr '$'
                         popa
-                        ; print
-                        push bx 
-                                xor bx, bx
-                                mov bl, [token]
-                                inc bx
-                                mov [token][bx], '$'
-                                mov [token], ' '
-                                call pnl
-                                m_print_s token
-                        pop bx
                         jmp begin_split
 
                 end_split:
@@ -261,7 +280,24 @@ _7:
                 m_print_w buff, num
 
 
-_8:
+_8:     is_equal token, q_help
+        jne _9
+        call pnl
+        m_print_s q_manual_1
+        call pnl
+        m_print_s q_manual_2
+        call pnl
+        m_print_s q_manual_3
+        call pnl
+        m_print_s q_manual_4
+        call pnl
+        m_print_s q_manual_5
+        call pnl
+        m_print_s q_manual_6
+        call pnl
+        m_print_s q_manual_7
+        call pnl
+_9:
     
         
 
