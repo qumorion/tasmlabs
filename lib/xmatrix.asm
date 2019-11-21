@@ -7,37 +7,55 @@
 proc_get_by_index proc near ; index into di:si, matrix offset in bx, result in al
 push bx
 push dx
+push di
+push si
     xor ax, ax
-    mov al, [bx]    ; num of rows
-    add bx, 2
+    mov ax, word ptr [bx]    ; num of rows
+    add bx, 4
+    mov dx, 2
+    mul dx
     mul di
-    ;mul 2
-    add ax, si
-    add ax, bx
-
-    mov bx, ax
+    mov di, ax
     xor ax, ax
-    mov al, [bx]  ;   result
+    mov ax, si
+    mov dx, 2
+    mul dx
+    add ax, di
+    
+    add bx, ax
+    xor ax, ax
+    mov ax, word ptr [bx]  ;   result
+pop si
+pop di
 pop dx
 pop bx
 ret
 endp
 
-proc_set_by_index proc near ; index into di:si, matrix offset in bx, num in al
+proc_set_by_index proc near ; index into di:si, matrix offset in bx, result in al
 push bx
 push dx
-push ax
+push di
+push si
+    push ax
     xor ax, ax
-    mov al, [bx]    ; num of rows
-    add bx, 2
+    mov ax, word ptr [bx]    ; num of rows
+    add bx, 4
+    mov dx, 2
+    mul dx
     mul di
-    ;mul 2
-    add ax, si
-    add ax, bx
-
-    mov bx, ax
-pop ax
-    mov [bx], al  ;   result
+    mov di, ax
+    xor ax, ax
+    mov ax, si
+    mov dx, 2
+    mul dx
+    add ax, di
+    
+    add bx, ax
+    pop ax
+    mov [bx], ax  ;   result
+pop si
+pop di
 pop dx
 pop bx
 ret
@@ -59,13 +77,13 @@ pusha
     @@next_row:
     call pnl
     xor ax, ax
-    mov al, [bx]
+    mov ax, [bx]
     cmp di, ax
     jae @@end_print
     mov si, 0
 
         @@next_column:
-        mov al, [bx][1]
+        mov ax, [bx][2]
         cmp si, ax
         jae @@end_column
 
@@ -73,7 +91,6 @@ pusha
         ; PRINTING ELEMENT
         pusha
         mov si, @@buff
-        cbw 
         cwde 
         call proc_print_int
         
@@ -192,14 +209,11 @@ local @@matrix:word:1, @@buff:word:1, @@token:word:1, @@delim:byte:1, @@max_row:
     mov @@buff, si         
     mov @@token, di       
     mov @@delim, ' '
-    xor dx, dx
-    mov dl, ah
-    mov @@max_row, dx
-    mov dl, al
+    mov @@max_row, ax
     mov @@max_column, dx
 
-    mov [bx], ah
-    mov [bx][1], al
+    mov [bx], ax
+    mov [bx][2], dx
     mov di, 0
 
     next_row:
@@ -264,8 +278,8 @@ pusha
     lea bx, [matrix]
     lea si, [buff]
     lea di, [token]
-    mov ah, rows
-    mov al, columns
+    mov ax, rows
+    mov dx, columns
     call proc_enter_matrix
 popa
 endm

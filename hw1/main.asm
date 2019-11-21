@@ -38,8 +38,8 @@ q_sum db 3, 'sum'
 
 
 space_symb db ' '
-rows db 0
-columns db 0
+rows dw 3
+columns dw 3
 num dw 0
 
 ; ###########################################################################################################
@@ -53,11 +53,9 @@ include task.asm        ; Задание варианта
 start:
     mov ax, @data
     mov ds, ax
-   ;call proc_cls
-   ;m_set_cursor 1, 0
+    int 3
 
     get_string:
-
         call pnl
         m_print_s q_command
         m_scan_s buff                               ; read string from console
@@ -85,7 +83,8 @@ start:
         ;       ; Умножение матрицы             <= обязательно напишите, что делает ваш кейс
 _1:
         is_equal token, q_exit
-        jne _2                                    
+        jne _2          
+                handle_exit:                          
                 call pnl
                 mov ax, 4C00h
                 int 21h
@@ -102,13 +101,13 @@ _2:
                 push ax
                 lea si, token   
                 call _convert_string_to_byte ; convert to number
-                mov [rows], al
+                mov [rows], ax
                 pop ax
                 pop si
                 call proc_next_token ; get columns
                 lea si, token   
                 call _convert_string_to_byte ; convert to number
-                mov [columns], al
+                mov [columns], ax
                 call pnl
                 m_print_s q_enter_matrix
                 call pnl
@@ -136,13 +135,13 @@ _4:
 _5:
         is_equal token, q_transpose
         jne _6
-                    call pnl
-                    push si
-                    lea si, matrix
-                    call proc_transpose_matrix
-                    m_print_s q_transpose_success
-                    call pnl
-                    pop si
+                    ;call pnl
+                    ;push si
+                    ;lea si, matrix
+                    ;call proc_transpose_matrix
+                    ;m_print_s q_transpose_success
+                    ;call pnl
+                    ;pop si
         ; ТРАНСПОНИРОВАНИЕ МАТРИЦЫ
 
 _6:
