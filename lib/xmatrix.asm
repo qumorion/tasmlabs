@@ -95,7 +95,7 @@ pusha
         call proc_print_int
         
         mov ah, 2
-        mov dl, ' '
+        mov dl, 09h
         int 21h
         popa
 
@@ -104,6 +104,7 @@ pusha
 
     @@end_column:
     inc di
+    call pnl
     jmp @@next_row
 
 @@end_print:
@@ -116,78 +117,50 @@ endp
 ; ############################################################################################################################
 
 
-proc_transpose_matrix proc near     ;(c) maxim
-;in: si - адресс матрицы, с размерами в первых друх байтах: row, column
-;out: ____
-	local @@temp:word:1
+proc_transpose_matrix proc near     
+;in: bx - адресс матрицы, с размерами в первых друх словах: row, column
 	push ax
 	push bx
 	push cx
 	push dx
 	push di
-	
-	mov bx, si
-	
-	mov al, [bx]
-	mov ah, [bx+1]
-	mul ah
-	mov si, ax
-	xor ax, ax
-	@@cycle:
-		dec si
-		mov al, [bx + si + 2]
-		push ax
-		cmp si, 0
-		je @@_out
-	jmp @@cycle
-	@@_out:
-	xor ax, ax
-	xor dx, dx
-	xor di, di
-	mov di, word ptr [bx]
-	and di, 0FFh
-	mov dl, [bx + 1]
-	mov @@temp, di
-	mov cx, di
-	add di, bx
-	;di -- кол-во строк в исходном
-	;si -- индекс строки в проге
-	;индекс si*di + bx
-	;dx -- кол-во столбцов в исходном
-	;bx -- кол-во индекс строки в проге
-	@@e_cycle:
-		xor si, si
-		@@i_cycle:
-			mov ax, cx
-			push dx
-			mul si
-			pop dx
-			mov si, ax
-			pop ax
-			mov [bx+si+2], al
-			mov ax, si
-			push dx
-			xor dx, dx
-			div cx
-			pop dx
-			mov si, ax
-			inc si
-			cmp si, dx
-			je @@i_exit
-			jmp @@i_cycle
-		@@i_exit:
-		inc bx
-		cmp bx, di
-		je @@e_exit
-		jmp @@e_cycle
-	@@e_exit:
-	sub bx, @@temp
-	mov al, [bx]
-	mov ah, [bx + 1]
-	mov [bx], ah
-	mov [bx + 1], al
-	
-	
+    
+    xor di, di
+
+    int 3
+    @@next_row:
+    cmp di, [bx]
+    je @@end_
+
+    mov si, 0
+    add si, di
+
+    @@next_column:
+    cmp si, bx[2]
+    je @@end_row
+    cmp si, di
+    je @@end_column
+
+    call proc_get_by_index
+    push ax
+    xchg di, si
+    call proc_get_by_index
+    xchg di, si
+    call proc_set_by_index
+    xchg di, si
+    pop ax
+    call proc_set_by_index
+    xchg di, si
+
+    @@end_column:
+    inc si
+    jmp @@next_column
+
+    @@end_row:
+    inc di
+    jmp @@next_row
+    
+	@@end_:
 	pop di
 	pop dx
 	pop cx

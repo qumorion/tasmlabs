@@ -1,4 +1,4 @@
-LOCALS 
+LOCALS
 .MODEL small
 .STACK 500
 .486
@@ -135,13 +135,13 @@ _4:
 _5:
         is_equal token, q_transpose
         jne _6
-                    ;call pnl
-                    ;push si
-                    ;lea si, matrix
-                    ;call proc_transpose_matrix
-                    ;m_print_s q_transpose_success
-                    ;call pnl
-                    ;pop si
+                    call pnl
+                    push bx
+                    lea bx, matrix
+                    call proc_transpose_matrix
+                    m_print_s q_transpose_success
+                    call pnl
+                    pop bx
         ; ТРАНСПОНИРОВАНИЕ МАТРИЦЫ
 
 _6:
@@ -235,9 +235,9 @@ _7:
                                 jb num_check
                                 cmp [bx], byte ptr '9'
                                 ja num_check
-                                jmp end_dum_no
+                                jmp end_num_no
 
-                                end_dum_no:
+                                end_num_no:
                                 popa
                                 jmp begin_split
 
